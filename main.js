@@ -1,6 +1,17 @@
 let shoe = [];
 let numDecks = 8; //number of deck in a shoe
 
+let mainHome = document.querySelector(".index-main");
+
+let startButton = mainHome.querySelector(".start-button");
+startButton.addEventListener("click", beginGame);
+
+function beginGame() {
+  console.log("begin game function hit");
+  newShoe = loadShoe();
+  console.log(shoe);
+}
+
 function loadShoe() {
   let suites = ["H", "D", "S", "C"];
   for (let i = 0; i < numDecks; i++) {
@@ -26,6 +37,3 @@ function shuffle(shoe) {
   }
   return shoe;
 }
-
-let newShoe = loadShoe();
-console.log(newShoe);
