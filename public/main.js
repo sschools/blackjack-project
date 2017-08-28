@@ -1,16 +1,60 @@
 let newShoe = [];
 let numDecks = 8; //number of deck in a shoe
 let gameStart = false;
-
-let gameMain = document.querySelector(".main-game");
+let index = 0;
+let gameMain = document.querySelector("main");
 let html = "";
+let dealer = {
+  hand: [],
+  total: 0,
+  bJack: false,
+  bust: false
+};
+let player = {
+  hand: [],
+  total: 0,
+  bJack: false,
+  bust: false,
+  bankroll: [],
+  bets: []
+}
 
 if (!gameStart) {
   beginGame();
+  setView();
+}
+
+function setView() {
+  if (dealer.hand.length === 0) {
+    html = `
+      <button type="button" class="dealButton">Deal Cards</button>
+    `;
+  } else {
+    html = `
+      <div class="dealer">
+    `;
+    for (let i = 0; i < dealer.hand.length; i++) {
+      html += `<span>${dealer.hand[i].name}</span>
+      `
+    }
+    html += `</div><br>
+    <div class="player">`
+    for (let i = 0; i < player.hand.length; i++) {
+      html += `<span>${player.hand[i].name}</span>
+      `
+    }
+    html += `</div>`
+  }
+  gameMain.innerHTML = html;
+  let dealButton = document.querySelector(".dealButton");
+  if (dealButton) {
+    dealButton.addEventListener("click", deal);
+  }
 }
 
 function beginGame() {
-  console.log("begin game function hit");
+  gameStart = true;
+  index = 1;
   newShoe = loadShoe();
   console.log(newShoe);
 }
@@ -40,4 +84,15 @@ function shuffle(shoe) {
     shoe[i] = temp;
   }
   return shoe;
+}
+
+function deal() {
+  player.hand[0] = newShoe[index];
+  dealer.hand[0] = newShoe[index+1];
+  player.hand[1] = newShoe[index+2];
+  dealer.hand[1] = newShoe[index+3];
+  index+= 4;
+  console.log(player.hand);
+  console.log(dealer.hand);
+  setView();
 }
