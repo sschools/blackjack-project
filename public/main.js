@@ -1,18 +1,22 @@
-let shoe = [];
+let newShoe = [];
 let numDecks = 8; //number of deck in a shoe
+let gameStart = false;
 
-let mainHome = document.querySelector(".index-main");
+let gameMain = document.querySelector(".main-game");
+let html = "";
 
-let startButton = mainHome.querySelector(".start-button");
-startButton.addEventListener("click", beginGame);
+if (!gameStart) {
+  beginGame();
+}
 
 function beginGame() {
   console.log("begin game function hit");
   newShoe = loadShoe();
-  console.log(shoe);
+  console.log(newShoe);
 }
 
 function loadShoe() {
+  let shoe = [];
   let suites = ["H", "D", "S", "C"];
   for (let i = 0; i < numDecks; i++) {
     for (let j = 0; j < suites.length; j++) {

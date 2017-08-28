@@ -3,7 +3,7 @@ const session = require("express-session");
 const mustacheExpress = require("mustache-express");
 const parseurl = require("parseurl");
 const bodyParser = require("body-parser");
-const {beginGame} = require("./dal");
+
 
 const app = express();
 
@@ -36,7 +36,6 @@ app.get("/game", function(req, res) {
 });
 
 app.post("/index", function(req, res) {
-  shoe = beginGame();
   res.redirect("/game");
 });
 
