@@ -13,10 +13,17 @@ let dealer = {
 let player = {
   hand: [],
   total: 0,
+  totalText: "",
   bJack: false,
   bust: false,
   bankroll: [],
-  bets: []
+  bets: [],
+  buttons: {
+    hit: {},
+    stand: {},
+    double: {},
+    split: {}
+  }
 }
 
 if (!gameStart) {
@@ -32,23 +39,52 @@ function setView() {
   } else {
     html = `
       <div class="dealer">
+      <h3>Dealer's Hand:</h3>
     `;
     for (let i = 0; i < dealer.hand.length; i++) {
       html += `<span>${dealer.hand[i].name}</span>
       `
     }
     html += `</div><br>
-    <div class="player">`
+    <div class="player">
+    <h3>Player Hand:</h3>
+    `
     for (let i = 0; i < player.hand.length; i++) {
       html += `<span>${player.hand[i].name}</span>
       `
     }
-    html += `</div>`
+    html += `<span>   Total: ${player.totalText}</span>
+    </div>
+      <br>
+      <button type="button" class="hitButton">Hit</button>
+      <button type="button" class="standButton">Stand</button>
+      <button type="button" class="doubleButton">Double Down</button>
+      <button type="button" class="splitButton">Split</button>
+    `;
+    if (player.bust) {
+      html += `
+      <br>
+      <h2>You Busted!</h2>
+      `
+    }
   }
   gameMain.innerHTML = html;
   let dealButton = document.querySelector(".dealButton");
+  player.buttons.hit = document.querySelector(".hitButton");
+  player.buttons.stand = document.querySelector(".standButton");
+  player.buttons.double = document.querySelector(".doubleButton");
+  player.buttons.split = document.querySelector(".splitButton");
+  if (player.buttons.hit) {
+    player.buttons.hit.addEventListener("click", hit);
+    player.buttons.stand.addEventListener("click", stand);
+    player.buttons.double.addEventListener("click", doubleDown);
+    player.buttons.split.addEventListener("click", split);
+  }
   if (dealButton) {
     dealButton.addEventListener("click", deal);
+  }
+  if (player.buttons.hit) {
+    checkButtons();
   }
 }
 
@@ -92,7 +128,72 @@ function deal() {
   player.hand[1] = newShoe[index+2];
   dealer.hand[1] = newShoe[index+3];
   index+= 4;
+  player.bust = false;
   console.log(player.hand);
   console.log(dealer.hand);
+  setTotal();
   setView();
+}
+
+function setTotal() {
+  let ace = false;
+  player.total = 0;
+  for (let i = 0; i < player.hand.length; i++) {
+    player.total += player.hand[i].value;
+    if (player.hand[i].name.includes("A")) {
+      ace = true;
+    }
+  }
+  if (player.total < 12 && ace) {
+    player.totalText = player.total + " or " + (player.total + 10);
+  } else {
+    player.totalText = player.total;
+  }
+  checkBust();
+}
+
+function checkBust() {
+  if (player.total > 21) {
+    player.bust = true;
+  }
+}
+
+function checkButtons() {
+  player.buttons.hit.disabled = false;
+  player.buttons.stand.disabled = false;
+  player.buttons.double.disabled = false;
+  player.buttons.split.disabled = false;
+  if (player.bust) {
+    player.buttons.hit.disabled = true;
+    player.buttons.stand.disabled = true;
+    player.buttons.double.disabled = true;
+    player.buttons.split.disabled = true;
+  } else if (player.hand.length > 2) {
+    player.buttons.double.disabled = true;
+    player.buttons.split.disabled = true;
+  } else {
+    if (player.hand[0].value !== player.hand[1].value) {
+      player.buttons.split.disabled = true;
+    }
+  }
+}
+
+function hit() {
+  let x = player.hand.length;
+  player.hand.push(newShoe[index]);
+  index += 1;
+  setTotal();
+  setView();
+}
+
+function stand() {
+
+}
+
+function doubleDown() {
+
+}
+
+function split() {
+
 }
