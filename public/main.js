@@ -1,3 +1,5 @@
+//write playDealer function next
+
 let newShoe = [];
 let numDecks = 8; //number of deck in a shoe
 let gameStart = false;
@@ -8,7 +10,9 @@ let dealer = {
   hand: [],
   total: 0,
   bJack: false,
-  bust: false
+  bust: false,
+  ace: false,
+  stand: false
 };
 let player = {
   hand: [],
@@ -16,6 +20,8 @@ let player = {
   totalText: "",
   bJack: false,
   bust: false,
+  ace: false,
+  stand: false,
   bankroll: [],
   bets: [],
   buttons: {
@@ -67,6 +73,13 @@ function setView() {
       <h2>You Busted!</h2>
       `
     }
+    if (dealer.bJack) {
+      html += `
+      <br>
+      <h2>Dealer Had Blackjack. You Lose!</h2>
+      `
+    }
+
   }
   gameMain.innerHTML = html;
   let dealButton = document.querySelector(".dealButton");
@@ -131,21 +144,22 @@ function deal() {
   player.bust = false;
   console.log(player.hand);
   console.log(dealer.hand);
+  checkDealerBlackjack();
   setTotal();
   setView();
 }
 
 function setTotal() {
-  let ace = false;
   player.total = 0;
   for (let i = 0; i < player.hand.length; i++) {
     player.total += player.hand[i].value;
     if (player.hand[i].name.includes("A")) {
-      ace = true;
+      player.ace = true;
     }
   }
-  if (player.total < 12 && ace) {
+  if (player.total < 12 && player.ace) {
     player.totalText = player.total + " or " + (player.total + 10);
+    player.total += 10;
   } else {
     player.totalText = player.total;
   }
@@ -179,7 +193,6 @@ function checkButtons() {
 }
 
 function hit() {
-  let x = player.hand.length;
   player.hand.push(newShoe[index]);
   index += 1;
   setTotal();
@@ -187,7 +200,9 @@ function hit() {
 }
 
 function stand() {
-
+  player.stand = true;
+  setTotal();
+  playDealer();
 }
 
 function doubleDown() {
@@ -195,5 +210,15 @@ function doubleDown() {
 }
 
 function split() {
+
+}
+
+function checkDealerBlackjack() {
+  if ((dealer.hand[0].value === 1 && dealer.hand[1].value === 10) || (dealer.hand[1].value === 1 && dealer.hand[0].value === 10)) {
+    dealer.bJack = true;
+  }
+}
+
+function playDealer() {
 
 }
