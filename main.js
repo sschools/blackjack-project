@@ -1,9 +1,10 @@
-//write playDealer function next
+
 
 let newShoe = [];
 let numDecks = 8; //number of deck in a shoe
+let numPlayers = 1;
 let gameStart = false;
-let index = 0;
+let index = 0; //place in shoe
 let gameMain = document.querySelector("main");
 let html = "";
 let dealer = {
@@ -17,19 +18,48 @@ let dealer = {
 
 function Player() {
   this.hands = [];
-  this.bankroll = [];
-  this.bets = [];
+  this.bankroll = [1000];
+  this.bets = [2];
   this.buttons = { hit: {}, stand: {}, double: {}, split: {} };
 }
 
 function Hand() {
   this.cards = [];
-  this.total = 0;
   this.bJack = false;
   this.bust = false;
   this.ace = false;
   this.stand = false;
+  this.total = 0;
   this.totalText = "";
+  this.setTotal = function(cards) {
+    let total = 0;
+    for (let i = 0; i < cards.length; i++) {
+      total += cards[i].value;
+      if (cards[i].name.includes("A")) {
+        this.ace = true;
+      }
+    }
+    if (total < 12 && this.ace) {
+      this.totalText = total + " or " + (total + 10);
+      total += 10;
+    } else {
+      this.totalText = total;
+    }
+    return total;
+  }
+  this.checkBust = function(total) {
+    let bust = false;
+    if (total > 21) {
+      bust = true;
+    }
+    return bust;
+  }
+  this.hit = function() {
+    this.cards.push(newShoe[index]);
+    index += 1;
+    this.total = this.setTotal(this.cards);
+    setView();
+  }
 }
 
 let player1 = new Player();
@@ -37,6 +67,7 @@ let player1 = new Player();
 player1.hands[0] = new Hand();
 
 if (!gameStart) {
+  setPlayerNum();
   beginGame();
   setView();
 }
@@ -94,7 +125,7 @@ function setView() {
   player1.buttons.double = document.querySelector(".doubleButton");
   player1.buttons.split = document.querySelector(".splitButton");
   if (player1.buttons.hit) {
-    player1.buttons.hit.addEventListener("click", hit);
+    player1.buttons.hit.addEventListener("click", player1.hands[0].hit);
     player1.buttons.stand.addEventListener("click", stand);
     player1.buttons.double.addEventListener("click", doubleDown);
     player1.buttons.split.addEventListener("click", split);
@@ -111,6 +142,27 @@ function beginGame() {
   gameStart = true;
   index = 1;
   newShoe = loadShoe();
+}
+
+function setPlayerNum() {
+  let players;
+  html = `
+      <h2>How Many Players?</h2>
+      <br>
+      <form>
+      <select name="players">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+      </select>
+      <button name="player-enter" type="submit">Start</button>
+      </form>
+    `;
+  gameMain.innerHTML = html;
+  numPlayers = players;
 }
 
 function loadShoe() {
@@ -143,67 +195,35 @@ function shuffle(shoe) {
 function deal() {
   player1.hands[0].cards[0] = newShoe[index];
   dealer.hand[0] = newShoe[index+1];
-  player1.hands[1].cards[0] = newShoe[index+2];
+  player1.hands[0].cards[1] = newShoe[index+2];
   dealer.hand[1] = newShoe[index+3];
   index+= 4;
   player1.hands[0].bust = false;
   console.log(player1.hands[0]);
   console.log(dealer.hand);
   checkDealerBlackjack();
-  setTotal(player1.hands[0]);
+  player1.hands[0].total = player1.hands[0].setTotal(player1.hands[0].cards);
   setView();
-}
-
-function setTotal(hand) {
-  hand.total = 0;
-  for (let i = 0; i < hand.cards.length; i++) {
-    hand.total += hand.cards[i].value;
-    if (hand.cards[i].name.includes("A")) {
-      hand.ace = true;
-    }
-  }
-  if (hand.total < 12 && hand.ace) {
-    hand.totalText = hand.total + " or " + (hand.total + 10);
-    hand.total += 10;
-  } else {
-    hand.totalText = hand.total;
-  }
-  checkBust(hand);
-  return hand;
-}
-
-function checkBust(hand) {
-  if (hand.total > 21) {
-    hand.bust = true;
-  }
-  endHand();
 }
 
 function checkButtons() {
-  player.buttons.hit.disabled = false;
-  player.buttons.stand.disabled = false;
-  player.buttons.double.disabled = false;
-  player.buttons.split.disabled = false;
-  if (player.bust) {
-    player.buttons.hit.disabled = true;
-    player.buttons.stand.disabled = true;
-    player.buttons.double.disabled = true;
-    player.buttons.split.disabled = true;
-  } else if (player.hand.length > 2) {
-    player.buttons.double.disabled = true;
-    player.buttons.split.disabled = true;
+  player1.buttons.hit.disabled = false;
+  player1.buttons.stand.disabled = false;
+  player1.buttons.double.disabled = false;
+  player1.buttons.split.disabled = false;
+  if (player1.hands[0].bust) {
+    player1.buttons.hit.disabled = true;
+    player1.buttons.stand.disabled = true;
+    player1.buttons.double.disabled = true;
+    player1.buttons.split.disabled = true;
+  } else if (player1.hands[0].cards.length > 2) {
+    player1.buttons.double.disabled = true;
+    player1.buttons.split.disabled = true;
   } else {
-    if (player.hand[0].value !== player.hand[1].value) {
-      player.buttons.split.disabled = true;
+    if (player1.hands[0].cards[0].value !== player1.hands[0].cards[1].value) {
+      player1.buttons.split.disabled = true;
     }
   }
-}
-
-function hit() {
-  player.hand.push(newShoe[index]);
-  index += 1;
-  setTotal();
-  setView();
 }
 
 function stand() {
@@ -227,16 +247,7 @@ function checkDealerBlackjack() {
 }
 
 function playDealer(hand) {
-  let ace = false;
-  for (let i = 0; i < hand.length; i++) {
-    if (hand[i].value === 1) {
-      ace = true;
-    }
-    hand.total += hand[i].value;
-  }
-  if (ace && hand.total < 12) {
-    hand.total += 10;
-  }
+
 }
 
 function endHand() {
