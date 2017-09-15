@@ -14,23 +14,27 @@ let dealer = {
   ace: false,
   stand: false
 };
-let player = {
-  hand: [],
-  total: 0,
-  totalText: "",
-  bJack: false,
-  bust: false,
-  ace: false,
-  stand: false,
-  bankroll: [],
-  bets: [],
-  buttons: {
-    hit: {},
-    stand: {},
-    double: {},
-    split: {}
-  }
+
+function Player() {
+  this.hands = [];
+  this.bankroll = [];
+  this.bets = [];
+  this.buttons = { hit: {}, stand: {}, double: {}, split: {} };
 }
+
+function Hand() {
+  this.cards = [];
+  this.total = 0;
+  this.bJack = false;
+  this.bust = false;
+  this.ace = false;
+  this.stand = false;
+  this.totalText = "";
+}
+
+let player1 = new Player();
+
+player1.hands[0] = new Hand();
 
 if (!gameStart) {
   beginGame();
@@ -55,19 +59,21 @@ function setView() {
     <div class="player">
     <h3>Player Hand:</h3>
     `
-    for (let i = 0; i < player.hand.length; i++) {
-      html += `<span>${player.hand[i].name}</span>
+    for (let i = 0; i < player1.hands[0].cards.length; i++) {
+      html += `<span>${player1.hands[0].cards[i].name}</span>
       `
     }
-    html += `<span>   Total: ${player.totalText}</span>
+    html += `<span>   Total: ${player1.hands[0].totalText}</span>
     </div>
       <br>
       <button type="button" class="hitButton">Hit</button>
       <button type="button" class="standButton">Stand</button>
       <button type="button" class="doubleButton">Double Down</button>
       <button type="button" class="splitButton">Split</button>
+      <br>
+      <h3>Bankroll: ${player1.bankroll[0]}
     `;
-    if (player.bust) {
+    if (player1.hands[0].bust) {
       html += `
       <br>
       <h2>You Busted!</h2>
@@ -79,24 +85,24 @@ function setView() {
       <h2>Dealer Had Blackjack. You Lose!</h2>
       `
     }
-
   }
+
   gameMain.innerHTML = html;
   let dealButton = document.querySelector(".dealButton");
-  player.buttons.hit = document.querySelector(".hitButton");
-  player.buttons.stand = document.querySelector(".standButton");
-  player.buttons.double = document.querySelector(".doubleButton");
-  player.buttons.split = document.querySelector(".splitButton");
-  if (player.buttons.hit) {
-    player.buttons.hit.addEventListener("click", hit);
-    player.buttons.stand.addEventListener("click", stand);
-    player.buttons.double.addEventListener("click", doubleDown);
-    player.buttons.split.addEventListener("click", split);
+  player1.buttons.hit = document.querySelector(".hitButton");
+  player1.buttons.stand = document.querySelector(".standButton");
+  player1.buttons.double = document.querySelector(".doubleButton");
+  player1.buttons.split = document.querySelector(".splitButton");
+  if (player1.buttons.hit) {
+    player1.buttons.hit.addEventListener("click", hit);
+    player1.buttons.stand.addEventListener("click", stand);
+    player1.buttons.double.addEventListener("click", doubleDown);
+    player1.buttons.split.addEventListener("click", split);
   }
   if (dealButton) {
     dealButton.addEventListener("click", deal);
   }
-  if (player.buttons.hit) {
+  if (player1.buttons.hit) {
     checkButtons();
   }
 }
@@ -105,7 +111,6 @@ function beginGame() {
   gameStart = true;
   index = 1;
   newShoe = loadShoe();
-  console.log(newShoe);
 }
 
 function loadShoe() {
@@ -136,40 +141,42 @@ function shuffle(shoe) {
 }
 
 function deal() {
-  player.hand[0] = newShoe[index];
+  player1.hands[0].cards[0] = newShoe[index];
   dealer.hand[0] = newShoe[index+1];
-  player.hand[1] = newShoe[index+2];
+  player1.hands[1].cards[0] = newShoe[index+2];
   dealer.hand[1] = newShoe[index+3];
   index+= 4;
-  player.bust = false;
-  console.log(player.hand);
+  player1.hands[0].bust = false;
+  console.log(player1.hands[0]);
   console.log(dealer.hand);
   checkDealerBlackjack();
-  setTotal();
+  setTotal(player1.hands[0]);
   setView();
 }
 
-function setTotal() {
-  player.total = 0;
-  for (let i = 0; i < player.hand.length; i++) {
-    player.total += player.hand[i].value;
-    if (player.hand[i].name.includes("A")) {
-      player.ace = true;
+function setTotal(hand) {
+  hand.total = 0;
+  for (let i = 0; i < hand.cards.length; i++) {
+    hand.total += hand.cards[i].value;
+    if (hand.cards[i].name.includes("A")) {
+      hand.ace = true;
     }
   }
-  if (player.total < 12 && player.ace) {
-    player.totalText = player.total + " or " + (player.total + 10);
-    player.total += 10;
+  if (hand.total < 12 && hand.ace) {
+    hand.totalText = hand.total + " or " + (hand.total + 10);
+    hand.total += 10;
   } else {
-    player.totalText = player.total;
+    hand.totalText = hand.total;
   }
-  checkBust();
+  checkBust(hand);
+  return hand;
 }
 
-function checkBust() {
-  if (player.total > 21) {
-    player.bust = true;
+function checkBust(hand) {
+  if (hand.total > 21) {
+    hand.bust = true;
   }
+  endHand();
 }
 
 function checkButtons() {
@@ -219,6 +226,19 @@ function checkDealerBlackjack() {
   }
 }
 
-function playDealer() {
+function playDealer(hand) {
+  let ace = false;
+  for (let i = 0; i < hand.length; i++) {
+    if (hand[i].value === 1) {
+      ace = true;
+    }
+    hand.total += hand[i].value;
+  }
+  if (ace && hand.total < 12) {
+    hand.total += 10;
+  }
+}
+
+function endHand() {
 
 }
