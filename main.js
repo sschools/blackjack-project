@@ -244,16 +244,12 @@ function deal() {
   dealer.hand[1] = newShoe[index];
   index += 1;
 
-  for (let i = 0; i < numPlayers; i++) {
-    console.log(seats[i].hands[0].cards);
-  }
-  console.log(dealer.hand);
-  /*
-
   checkDealerBlackjack();
-  player1.hands[0].total = player1.hands[0].setTotal(player1.hands[0].cards);
+  for (let i = 0; i < numPlayers; i++) {
+    let temp = seats[i].hands[0];
+    temp.total = temp.setTotal(temp.cards);
+  }
   setView();
-  */
 }
 
 function checkButtons() {
