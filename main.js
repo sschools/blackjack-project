@@ -2,7 +2,8 @@
 
 let newShoe = [];
 let numDecks = 8; //number of deck in a shoe
-let numPlayers = 1;
+let numPlayers = 0;
+let seats = []; //empty array to hold players
 let gameStart = false;
 let index = 0; //place in shoe
 let gameMain = document.querySelector("main");
@@ -62,64 +63,21 @@ function Hand() {
   }
 }
 
-let player1 = new Player();
-
-player1.hands[0] = new Hand();
+//body
 
 if (!gameStart) {
-  setPlayerNum();
   beginGame();
   setView();
 }
 
 function setView() {
-  if (dealer.hand.length === 0) {
-    html = `
-      <button type="button" class="dealButton">Deal Cards</button>
-    `;
-  } else {
-    html = `
-      <div class="dealer">
-      <h3>Dealer's Hand:</h3>
-    `;
-    for (let i = 0; i < dealer.hand.length; i++) {
-      html += `<span>${dealer.hand[i].name}</span>
-      `
-    }
-    html += `</div><br>
-    <div class="player">
-    <h3>Player Hand:</h3>
-    `
-    for (let i = 0; i < player1.hands[0].cards.length; i++) {
-      html += `<span>${player1.hands[0].cards[i].name}</span>
-      `
-    }
-    html += `<span>   Total: ${player1.hands[0].totalText}</span>
-    </div>
-      <br>
-      <button type="button" class="hitButton">Hit</button>
-      <button type="button" class="standButton">Stand</button>
-      <button type="button" class="doubleButton">Double Down</button>
-      <button type="button" class="splitButton">Split</button>
-      <br>
-      <h3>Bankroll: ${player1.bankroll[0]}
-    `;
-    if (player1.hands[0].bust) {
-      html += `
-      <br>
-      <h2>You Busted!</h2>
-      `
-    }
-    if (dealer.bJack) {
-      html += `
-      <br>
-      <h2>Dealer Had Blackjack. You Lose!</h2>
-      `
-    }
-  }
+  html = getHtml();
 
   gameMain.innerHTML = html;
-  let dealButton = document.querySelector(".dealButton");
+
+  domAndListeners();
+
+/*
   player1.buttons.hit = document.querySelector(".hitButton");
   player1.buttons.stand = document.querySelector(".standButton");
   player1.buttons.double = document.querySelector(".doubleButton");
@@ -130,11 +88,22 @@ function setView() {
     player1.buttons.double.addEventListener("click", doubleDown);
     player1.buttons.split.addEventListener("click", split);
   }
-  if (dealButton) {
-    dealButton.addEventListener("click", deal);
-  }
+
   if (player1.buttons.hit) {
     checkButtons();
+  }
+  */
+}
+
+function domAndListeners() {
+  if (numPlayers < 1) {
+    let playerForm = document.querySelector(".playerForm");
+    playerForm.addEventListener("submit", setPlayers);
+  } else if (dealer.hand.length === 0) {
+    let dealButton = document.querySelector(".dealButton");
+    dealButton.addEventListener("click", deal);
+  } else {
+
   }
 }
 
@@ -144,12 +113,28 @@ function beginGame() {
   newShoe = loadShoe();
 }
 
+function setDealScreen() {
+  html = `
+    <button type="button" class="dealButton">Deal Cards</button>
+  `;
+  return html;
+}
+
+function setPlayers(event) {
+  event.preventDefault();
+  numPlayers = event.target.players.value;
+  for (let i = 0; i < numPlayers; i++) {
+    seats[i] = new Player();
+    seats[i].hands[0] = new Hand();
+  }
+  setView();
+}
+
 function setPlayerNum() {
-  let players;
   html = `
       <h2>How Many Players?</h2>
       <br>
-      <form>
+      <form class="playerForm">
       <select name="players">
         <option value="1">1</option>
         <option value="2">2</option>
@@ -161,8 +146,60 @@ function setPlayerNum() {
       <button name="player-enter" type="submit">Start</button>
       </form>
     `;
-  gameMain.innerHTML = html;
-  numPlayers = players;
+  return html;
+}
+
+function setTableScreen() {
+  html = `
+    <div class="dealer">
+    <h3>Dealer's Hand:</h3>
+  `;
+  for (let i = 0; i < dealer.hand.length; i++) {
+    html += `<span>${dealer.hand[i].name}</span>
+    `
+  }
+  html += `</div><br>
+  <div class="player">
+  <h3>Player Hand:</h3>
+  `
+  for (let i = 0; i < player1.hands[0].cards.length; i++) {
+    html += `<span>${player1.hands[0].cards[i].name}</span>
+    `
+  }
+  html += `<span>   Total: ${player1.hands[0].totalText}</span>
+  </div>
+    <br>
+    <button type="button" class="hitButton">Hit</button>
+    <button type="button" class="standButton">Stand</button>
+    <button type="button" class="doubleButton">Double Down</button>
+    <button type="button" class="splitButton">Split</button>
+    <br>
+    <h3>Bankroll: ${player1.bankroll[0]}
+  `;
+  if (player1.hands[0].bust) {
+    html += `
+    <br>
+    <h2>You Busted!</h2>
+    `
+  }
+  if (dealer.bJack) {
+    html += `
+    <br>
+    <h2>Dealer Had Blackjack. You Lose!</h2>
+    `
+  }
+  return html;
+}
+
+function getHtml() {
+  if (numPlayers < 1) {
+    html = setPlayerNum();
+  } else if (dealer.hand.length === 0) {
+    html = setDealScreen();
+  } else {
+    html = setTableScreen();
+  }
+  return html;
 }
 
 function loadShoe() {
@@ -193,17 +230,30 @@ function shuffle(shoe) {
 }
 
 function deal() {
-  player1.hands[0].cards[0] = newShoe[index];
-  dealer.hand[0] = newShoe[index+1];
-  player1.hands[0].cards[1] = newShoe[index+2];
-  dealer.hand[1] = newShoe[index+3];
-  index+= 4;
-  player1.hands[0].bust = false;
-  console.log(player1.hands[0]);
+  for (let i = 0; i < numPlayers; i++) {
+    seats[i].bust = false;
+    seats[i].hands[0].cards[0] = newShoe[index];
+    index += 1;
+  }
+  dealer.hand[0] = newShoe[index];
+  index += 1;
+  for (let i = 0; i < numPlayers; i++) {
+    seats[i].hands[0].cards[1] = newShoe[index];
+    index += 1;
+  }
+  dealer.hand[1] = newShoe[index];
+  index += 1;
+
+  for (let i = 0; i < numPlayers; i++) {
+    console.log(seats[i].hands[0].cards);
+  }
   console.log(dealer.hand);
+  /*
+
   checkDealerBlackjack();
   player1.hands[0].total = player1.hands[0].setTotal(player1.hands[0].cards);
   setView();
+  */
 }
 
 function checkButtons() {
