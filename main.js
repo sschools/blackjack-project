@@ -1,5 +1,4 @@
-
-
+//hit function working... is not checking for a bust
 let newShoe = [];
 let numDecks = 8; //number of deck in a shoe
 let numPlayers = 0;
@@ -8,6 +7,7 @@ let gameStart = false;
 let index = 0; //place in shoe
 let gameMain = document.querySelector("main");
 let html = "";
+let currentPlayer = 0;
 let dealer = {
   hand: [],
   total: 0,
@@ -21,11 +21,11 @@ function Player() {
   this.hands = [];
   this.bankroll = [1000];
   this.bets = [2];
-  this.buttons = { hit: {}, stand: {}, double: {}, split: {} };
+  this.buttons = { hit: {}, stand: {}, double: {}, split: {} }; //DOM objects defined in setButtons
 }
 
 function Hand() {
-  this.cards = [];
+  this.cards = [];  //this. items aren't recognized in function calls from outside object
   this.bJack = false;
   this.bust = false;
   this.ace = false;
@@ -55,12 +55,27 @@ function Hand() {
     }
     return bust;
   }
-  this.hit = function() {
-    this.cards.push(newShoe[index]);
+  this.hit = function(event) { //the value on the event target is the player number
+    player = event.target.value;
+    cards = getCards(player);
+    cards.push(newShoe[index]);
     index += 1;
-    this.total = this.setTotal(this.cards);
+    this.total = seats[player].hands[0].setTotal(cards);
     setView();
   }
+  this.stand = function() {
+
+  }
+  this.doubleDown = function() {
+
+  }
+  this.split = function() {
+
+  }
+}
+
+function getCards(player) {  //this is used when events are called and the cards are not recognized
+  return seats[player].hands[0].cards;
 }
 
 //body
@@ -72,27 +87,8 @@ if (!gameStart) {
 
 function setView() {
   html = getHtml();
-
   gameMain.innerHTML = html;
-
   domAndListeners();
-
-/*
-  player1.buttons.hit = document.querySelector(".hitButton");
-  player1.buttons.stand = document.querySelector(".standButton");
-  player1.buttons.double = document.querySelector(".doubleButton");
-  player1.buttons.split = document.querySelector(".splitButton");
-  if (player1.buttons.hit) {
-    player1.buttons.hit.addEventListener("click", player1.hands[0].hit);
-    player1.buttons.stand.addEventListener("click", stand);
-    player1.buttons.double.addEventListener("click", doubleDown);
-    player1.buttons.split.addEventListener("click", split);
-  }
-
-  if (player1.buttons.hit) {
-    checkButtons();
-  }
-  */
 }
 
 function domAndListeners() {
@@ -103,7 +99,7 @@ function domAndListeners() {
     let dealButton = document.querySelector(".dealButton");
     dealButton.addEventListener("click", deal);
   } else {
-
+    setButtons();
   }
 }
 
@@ -158,30 +154,38 @@ function setTableScreen() {
     html += `<span>${dealer.hand[i].name}</span>
     `
   }
-  html += `</div><br>
-  <div class="player">
-  <h3>Player Hand:</h3>
-  `
-  for (let i = 0; i < player1.hands[0].cards.length; i++) {
-    html += `<span>${player1.hands[0].cards[i].name}</span>
+
+  for (let i = 0; i < seats.length; i++) {
+    html += `</div><br>
+    <div class="player">
+    <h3>Player ${i + 1} Hand:</h3>
     `
-  }
-  html += `<span>   Total: ${player1.hands[0].totalText}</span>
+    let current = seats[i];
+    for (let j = 0; j < current.hands[0].cards.length; j++) {
+      html += `<span>${current.hands[0].cards[j].name}</span>
+      `
+    }
+  html += `<span>   Total: ${current.hands[0].totalText}</span>
   </div>
     <br>
-    <button type="button" class="hitButton">Hit</button>
-    <button type="button" class="standButton">Stand</button>
-    <button type="button" class="doubleButton">Double Down</button>
-    <button type="button" class="splitButton">Split</button>
+    <button type="button" id="player${i}hit" value="${i}">Hit</button>
+    <button type="button" id="player${i}stand">Stand</button>
+    <button type="button" id="player${i}double">Double Down</button>
+    <button type="button" id="player${i}split">Split</button>
     <br>
-    <h3>Bankroll: ${player1.bankroll[0]}
+    <h3>Bankroll: ${current.bankroll[0]}
   `;
-  if (player1.hands[0].bust) {
+
+  // this will move when game play is going
+  if (current.hands[0].bust) {
     html += `
     <br>
     <h2>You Busted!</h2>
     `
   }
+
+  }
+
   if (dealer.bJack) {
     html += `
     <br>
@@ -252,38 +256,38 @@ function deal() {
   setView();
 }
 
-function checkButtons() {
-  player1.buttons.hit.disabled = false;
-  player1.buttons.stand.disabled = false;
-  player1.buttons.double.disabled = false;
-  player1.buttons.split.disabled = false;
-  if (player1.hands[0].bust) {
-    player1.buttons.hit.disabled = true;
-    player1.buttons.stand.disabled = true;
-    player1.buttons.double.disabled = true;
-    player1.buttons.split.disabled = true;
-  } else if (player1.hands[0].cards.length > 2) {
-    player1.buttons.double.disabled = true;
-    player1.buttons.split.disabled = true;
-  } else {
-    if (player1.hands[0].cards[0].value !== player1.hands[0].cards[1].value) {
-      player1.buttons.split.disabled = true;
+function setButtons() {
+  for (let i = 0; i < seats.length; i++) {
+    seats[i].buttons.hit = document.querySelector("#player" + i + "hit");
+    seats[i].buttons.stand = document.querySelector("#player" + i + "stand");
+    seats[i].buttons.double = document.querySelector("#player" + i + "double");
+    seats[i].buttons.split = document.querySelector("#player" + i + "split");
+    seats[i].buttons.hit.addEventListener("click", seats[i].hands[0].hit);
+    seats[i].buttons.stand.addEventListener("click", seats[i].hands[0].stand);
+    seats[i].buttons.double.addEventListener("click", seats[i].hands[0].doubleDown);
+    seats[i].buttons.split.addEventListener("click", seats[i].hands[0].split);
+  }
+  for (let i = 0; i < seats.length; i++) {
+    seats[i].buttons.hit.disabled = false;
+    seats[i].buttons.stand.disabled = false;
+    seats[i].buttons.double.disabled = false;
+    seats[i].buttons.split.disabled = false;
+  }
+  for (let i = 0; i < seats.length; i++) {
+    if (currentPlayer === i) {
+      if (seats[i].hands[0].length > 2) {
+        seats[i].buttons.double.disabled = true;
+        seats[i].buttons.split.disabled = true;
+      } else if (seats[i].hands[0].cards[0].value !== seats[i].hands[0].cards[1].value) {
+        seats[i].buttons.split.disabled = true;
+      }
+    } else {
+      seats[i].buttons.hit.disabled = true;
+      seats[i].buttons.stand.disabled = true;
+      seats[i].buttons.double.disabled = true;
+      seats[i].buttons.split.disabled = true;
     }
   }
-}
-
-function stand() {
-  player.stand = true;
-  setTotal();
-  playDealer();
-}
-
-function doubleDown() {
-
-}
-
-function split() {
-
 }
 
 function checkDealerBlackjack() {
